@@ -2,7 +2,7 @@
 # Parser
 
 A library of parser combinators.
- 
+
 There are two modes of parsing described:
 
 * `lazy`: If the input buffer is exhausted before the parsing completes a `Pending`
@@ -21,10 +21,4 @@ The [`Parser`] type wraps other parsers and provides combinator methods for buil
 There are implementations for the `Functor`, `Applicative`, `Monad`, `Alternative`, and
 `Traversable` categories for [`Parser`] on both its `Output` and `Error` types.
 
-## The [`curry`] Crate
-
-The re-exported [`curry`] crate provides types for currying Rust functions such that you
-can still write out the type signature, used and useful for the `Applicative` instance.
-
 [`Parser`]: crate::Parser
-[`curry`]: crate::curry
