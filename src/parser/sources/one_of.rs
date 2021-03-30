@@ -33,7 +33,7 @@ impl<'a, T, I,> ParserFn<&'a [I],> for OneOf<T,>
     I: PartialEq, {
   type Output = PResult<&'a [I; 1], &'a [I; 1],>;
 
-  fn call_parser(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
     match input.split_first() {
       None => Parse::new(Pending(1,), input,),
       Some((tok, unused,)) => {
@@ -80,7 +80,7 @@ impl<'a, T, I,> ParserFn<&'a [I],> for NoneOf<T,>
     I: PartialEq, {
   type Output = PResult<&'a [I; 1], &'a [I; 1],>;
 
-  fn call_parser(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
     match input.split_first() {
       None => Parse::new(Pending(1,), input,),
       Some((tok, unused,)) => {

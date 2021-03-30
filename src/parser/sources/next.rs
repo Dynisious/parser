@@ -22,7 +22,7 @@ impl<'a, I,> ParserFn<&'a [I],> for Next {
   type Output = PResult<&'a [I], !,>;
 
   #[inline]
-  fn call_parser(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
     match self.count.checked_sub(input.len(),) {
       Some(pending) if pending > 0 => Parse::new(Pending(pending,), input,),
       _ => Parse::from(input.split_at(self.count,),).map(Output,),
@@ -53,7 +53,7 @@ impl<'a, I, const N: usize,> ParserFn<&'a [I],> for NextN<N,> {
   type Output = PResult<&'a [I; N], !,>;
 
   #[inline]
-  fn call_parser(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
     match N.checked_sub(input.len(),) {
       Some(pending) if pending > 0 => Parse::new(Pending(pending,), input,),
       _ => {

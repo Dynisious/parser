@@ -32,7 +32,7 @@ impl<'a, F, I,> ParserFn<&'a [I],> for Sat<F,>
   where F: Fn<(usize, &'a I,), Output = bool> + ?Sized, {
   type Output = PResult<&'a [I], !,>;
 
-  fn call_parser(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
     let matched = input.iter().enumerate()
       .take_while(|&(i, t),| (self.pred)(i, t,),)
       .count();
@@ -75,7 +75,7 @@ impl<'a, F, I,> ParserFn<&'a [I],> for Sat1<F,>
   where F: Fn<(usize, &'a I,), Output = bool> + ?Sized, {
   type Output = PResult<&'a [I], &'a [I; 1],>;
 
-  fn call_parser(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
     let matched = input.iter().enumerate()
       .take_while(|&(i, t),| (self.pred)(i, t,),)
       .count();

@@ -33,7 +33,7 @@ impl<'a, T, I,> ParserFn<&'a [I],> for Tag<T,>
     I: PartialEq, {
   type Output = PResult<&'a [I], &'a [I],>;
 
-  fn call_parser(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
     let tag = self.tag.as_ref();
     let matched = tag.iter().zip(input,)
       .take_while(|(a, b,),| a == b,)

@@ -5,6 +5,9 @@
 
 mod parser_fn;
 pub mod sources;
+pub mod mapping;
+pub mod apply;
+pub mod sequence;
 mod parser;
 
 pub use self::{parser::*, parser_fn::*,};

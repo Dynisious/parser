@@ -13,7 +13,7 @@ impl<'a, I,> ParserFn<&'a [I],> for Eof {
   type Output = Result<&'a [I; 0], &'a [I]>;
 
   #[inline]
-  fn call_parser(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
     Parse::new(
       if input.is_empty() { Ok(&[]) }
       else { Err(input) },

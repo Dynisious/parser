@@ -1,14 +1,14 @@
 //! A library of parser combinators.
 //! 
 //! Author --- DMorgan  
-//! Last Moddified --- 2021-03-26
+//! Last Moddified --- 2021-03-30
 
 #![no_std]
 #![deny(missing_docs,)]
 #![feature(
   never_type, coerce_unsized, try_trait, const_ptr_read, const_maybe_uninit_as_ptr,
   const_refs_to_cell, allocator_api, external_doc, bool_to_option, array_from_ref,
-  unboxed_closures, const_fn,
+  unboxed_closures, const_fn, const_mut_refs, fn_traits,
 )]
 
 #[cfg(feature = "alloc")]

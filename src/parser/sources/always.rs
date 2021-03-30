@@ -29,7 +29,7 @@ impl<T, I,> ParserFn<I,> for Always<T,>
   type Output = T;
 
   #[inline]
-  fn call_parser(&self, input: I,) -> Parse<Self::Output, I,> {
+  fn parse(&self, input: I,) -> Parse<Self::Output, I,> {
     Parse::new(self.value.clone(), input,)
   }
 }
