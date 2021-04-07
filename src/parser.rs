@@ -1,7 +1,7 @@
-//! Defines the [`Parser`](self::Parser) struct and [`ParserFn`](self::ParserFn) trait.
+//! Defines the [`Parser`](self::Parser) struct and `ParserFn*` traits.
 //! 
 //! Author --- DMorgan  
-//! Last Moddified --- 2021-04-01
+//! Last Moddified --- 2021-04-07
 
 mod parser_fn;
 pub mod sources;

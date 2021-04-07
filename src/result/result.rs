@@ -1,5 +1,5 @@
 //! Author --- DMorgan  
-//! Last Moddified --- 2021-03-26
+//! Last Moddified --- 2021-04-07
 
 use self::PResult::*;
 use core::{
@@ -259,6 +259,17 @@ impl<T, E,> From<Result<T, Result<E, usize>>> for PResult<T, E,> {
   #[inline]
   fn from(from: Result<T, Result<E, usize>>,) -> Self {
     from.map_or_else(Self::from_error, Output,)
+  }
+}
+
+impl<T, E,> From<PResult<T, E>> for Result<T, Result<E, usize>,> {
+  #[inline]
+  fn from(from: PResult<T, E,>,) -> Self {
+    match from {
+      PResult::Output(value) => Ok(value),
+      PResult::Pending(pending) => Err(Err(pending)),
+      PResult::Failed(error) => Err(Ok(error)),
+    }
   }
 }
 

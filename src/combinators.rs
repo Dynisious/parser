@@ -313,12 +313,12 @@ impl<F, T, P, U, E, I,> FnOnce<(Parse<T, I,>,)> for TrySeq<F,>
     P: ParserFnOnce<I, Value = U,>,
     U: Try<Error = E>,
     E: From<T::Error>, {
-  type Output = Parse<Result<U::Ok, E>, I,>;
+  type Output = Parse<U, I,>;
 
   extern "rust-call" fn call_once(self, (Parse { value, unused, },): (Parse<T, I,>,),) -> Self::Output {
     match value.into_result() {
-      Ok(v) => (self.0)(v,)(unused,).map(U::into_result,),
-      Err(e) => Parse::new(Err(e.into()), unused,),
+      Ok(v) => (self.0)(v,)(unused,),
+      Err(e) => Parse::new(U::from_error(e.into(),), unused,),
     }
   }
 }
@@ -331,8 +331,8 @@ impl<F, T, P, U, E, I,> FnMut<(Parse<T, I,>,)> for TrySeq<F,>
     E: From<T::Error>, {
   extern "rust-call" fn call_mut(&mut self, (Parse { value, unused, },): (Parse<T, I,>,),) -> Self::Output {
     match value.into_result() {
-      Ok(v) => (self.0)(v,)(unused,).map(U::into_result,),
-      Err(e) => Parse::new(Err(e.into()), unused,),
+      Ok(v) => (self.0)(v,)(unused,),
+      Err(e) => Parse::new(U::from_error(e.into(),), unused,),
     }
   }
 }
@@ -345,8 +345,8 @@ impl<F, T, P, U, E, I,> Fn<(Parse<T, I,>,)> for TrySeq<F,>
     E: From<T::Error>, {
   extern "rust-call" fn call(&self, (Parse { value, unused, },): (Parse<T, I,>,),) -> Self::Output {
     match value.into_result() {
-      Ok(v) => (self.0)(v,)(unused,).map(U::into_result,),
-      Err(e) => Parse::new(Err(e.into()), unused,),
+      Ok(v) => (self.0)(v,)(unused,),
+      Err(e) => Parse::new(U::from_error(e.into(),), unused,),
     }
   }
 }
@@ -380,12 +380,12 @@ impl<F, T, P, U, I,> FnOnce<(Parse<T, I,>,)> for TrySeqErr<F,>
     P: ParserFnOnce<I, Value = U,>,
     U: Try,
     U::Ok: From<T::Ok>, {
-  type Output = Parse<Result<U::Ok, U::Error>, I,>;
+  type Output = Parse<U, I,>;
 
   extern "rust-call" fn call_once(self, (Parse { value, unused, },): (Parse<T, I,>,),) -> Self::Output {
     match value.into_result() {
-      Ok(v) => Parse::new(Ok(v.into()), unused,),
-      Err(e) => (self.0)(e,)(unused,).map(U::into_result,),
+      Ok(v) => Parse::new(U::from_ok(v.into(),), unused,),
+      Err(e) => (self.0)(e,)(unused,),
     }
   }
 }
@@ -398,8 +398,8 @@ impl<F, T, P, U, I,> FnMut<(Parse<T, I,>,)> for TrySeqErr<F,>
     U::Ok: From<T::Ok>, {
   extern "rust-call" fn call_mut(&mut self, (Parse { value, unused, },): (Parse<T, I,>,),) -> Self::Output {
     match value.into_result() {
-      Ok(v) => Parse::new(Ok(v.into()), unused,),
-      Err(e) => (self.0)(e,)(unused,).map(U::into_result,),
+      Ok(v) => Parse::new(U::from_ok(v.into(),), unused,),
+      Err(e) => (self.0)(e,)(unused,),
     }
   }
 }
@@ -412,8 +412,8 @@ impl<F, T, P, U, I,> Fn<(Parse<T, I,>,)> for TrySeqErr<F,>
     U::Ok: From<T::Ok>, {
   extern "rust-call" fn call(&self, (Parse { value, unused, },): (Parse<T, I,>,),) -> Self::Output {
     match value.into_result() {
-      Ok(v) => Parse::new(Ok(v.into()), unused,),
-      Err(e) => (self.0)(e,)(unused,).map(U::into_result,),
+      Ok(v) => Parse::new(U::from_ok(v.into(),), unused,),
+      Err(e) => (self.0)(e,)(unused,),
     }
   }
 }
