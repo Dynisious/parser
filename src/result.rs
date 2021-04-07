@@ -1,7 +1,7 @@
 //! Defines the result types for parsers.
 //! 
 //! Author --- DMorgan  
-//! Last Moddified --- 2021-03-26
+//! Last Moddified --- 2021-03-31
 
 use core::{
   fmt,
@@ -31,6 +31,24 @@ impl<T, I,> Parse<T, I,> {
     where F: FnOnce(T,) -> U, { Parse::new(f(self.value,), self.unused,) }
 }
 
+impl<T, I,> Parse<Option<T>, I,> {
+  /// Transposes the `Option` and `Parse`.
+  #[inline]
+  pub fn transpose(self,) -> Option<Parse<T, I,>> {
+    let Parse { value, unused, } = self;
+    Some(Parse::new(value?, unused,))
+  }
+}
+
+impl<T, E, I,> Parse<Result<T, E>, I,> {
+  /// Transposes the `Result` and `Parse`.
+  #[inline]
+  pub fn transpose(self,) -> Result<Parse<T, I,>, E> {
+    let Parse { value, unused, } = self;
+    Ok(Parse::new(value?, unused,))
+  }
+}
+
 impl<T, I,> PartialEq<(T, I,),> for Parse<T, I,>
   where T: PartialEq,
     I: PartialEq, {
@@ -58,7 +76,7 @@ impl<T, I,> Try for Parse<T, I,>
 
 impl<T, I,> From<(T, I,)> for Parse<T, I,> {
   #[inline]
-  fn from((value, unused,): (T, I,),) -> Self { Self { value, unused, } }
+  fn from((value, unused,): (T, I,),) -> Self { Self::new(value, unused,) }
 }
 
 impl<T, I,> fmt::Debug for Parse<T, I,>

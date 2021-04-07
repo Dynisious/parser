@@ -1,16 +1,14 @@
 //! Author --- DMorgan  
-//! Last Moddified --- 2021-03-26
+//! Last Moddified --- 2021-04-07
 
 use crate::*;
-use core::ops::CoerceUnsized;
 
 /// A parser which accepts a specific sequence of tokens.
 /// 
 /// If an unexpected token occurs the matched prefix is returned as the error.
 #[derive(PartialEq, Eq, Clone, Copy, Default, Debug,)]
 #[repr(transparent,)]
-pub struct Tag<T,>
-  where T: ?Sized, {
+pub struct Tag<T,> {
   /// The expected sequence of tokens.
   pub tag: T,
 }
@@ -28,12 +26,26 @@ impl<T,> Tag<T,> {
   }
 }
 
-impl<'a, T, I,> ParserFn<&'a [I],> for Tag<T,>
-  where T: AsRef<[I]> + ?Sized,
+impl<'a, T, I,> FnOnce<(&'a [I],),> for Tag<T,>
+  where T: AsRef<[I]>,
     I: PartialEq, {
-  type Output = PResult<&'a [I], &'a [I],>;
+  type Output = Parse<PResult<&'a [I], &'a [I],>, &'a [I],>;
 
-  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  #[inline]
+  extern "rust-call" fn call_once(self, (input,): (&'a [I],),) -> Self::Output { (&self)(input,) }
+}
+
+impl<'a, T, I,> FnMut<(&'a [I],),> for Tag<T,>
+  where T: AsRef<[I]>,
+    I: PartialEq, {
+  #[inline]
+  extern "rust-call" fn call_mut(&mut self, (input,): (&'a [I],),) -> Self::Output { (&*self)(input,) }
+}
+
+impl<'a, T, I,> Fn<(&'a [I],),> for Tag<T,>
+  where T: AsRef<[I]>,
+    I: PartialEq, {
+  extern "rust-call" fn call(&self, (input,): (&'a [I],),) -> Self::Output {
     let tag = self.tag.as_ref();
     let matched = tag.iter().zip(input,)
       .take_while(|(a, b,),| a == b,)
@@ -46,12 +58,4 @@ impl<'a, T, I,> ParserFn<&'a [I],> for Tag<T,>
       input,
     ) }
   }
-}
-
-impl<T, U,> CoerceUnsized<Tag<U,>> for Tag<T,>
-  where T: CoerceUnsized<U> + ?Sized,
-    U: ?Sized, {}
-
-fn _assert_coerce_unsized(a: Tag<&i32,>,) {
-  let _: Tag<&dyn Send,> = a;
 }

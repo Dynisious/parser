@@ -1,16 +1,14 @@
 //! Author --- DMorgan  
-//! Last Moddified --- 2021-03-26
+//! Last Moddified --- 2021-04-07
 
 use crate::*;
-use core::ops::CoerceUnsized;
 
 /// A parser which accepts tokens as long as they satisfy a predicate.
 /// 
 /// The predicate is passed the current token and the count of previously matched tokens.
 #[derive(PartialEq, Eq, Clone, Copy, Default, Debug,)]
 #[repr(transparent,)]
-pub struct Sat<F,>
-  where F: ?Sized, {
+pub struct Sat<F,> {
   /// The predicate to apply.
   pub pred: F,
 }
@@ -28,11 +26,17 @@ impl<F,> Sat<F,> {
   }
 }
 
-impl<'a, F, I,> ParserFn<&'a [I],> for Sat<F,>
-  where F: Fn<(usize, &'a I,), Output = bool> + ?Sized, {
-  type Output = PResult<&'a [I], !,>;
+impl<'a, F, I,> FnOnce<(&'a [I],),> for Sat<F,>
+  where F: FnMut(usize, &'a I,) -> bool, {
+  type Output = Parse<PResult<&'a [I], !,>, &'a [I],>;
 
-  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  #[inline]
+  extern "rust-call" fn call_once(mut self, (input,): (&'a [I],),) -> Self::Output { (&mut self)(input,) }
+}
+
+impl<'a, F, I,> FnMut<(&'a [I],),> for Sat<F,>
+  where F: FnMut(usize, &'a I,) -> bool, {
+  extern "rust-call" fn call_mut(&mut self, (input,): (&'a [I],),) -> Self::Output {
     let matched = input.iter().enumerate()
       .take_while(|&(i, t),| (self.pred)(i, t,),)
       .count();
@@ -42,9 +46,17 @@ impl<'a, F, I,> ParserFn<&'a [I],> for Sat<F,>
   }
 }
 
-impl<F, U,> CoerceUnsized<Sat<U,>> for Sat<F,>
-  where F: CoerceUnsized<U> + ?Sized,
-    U: ?Sized, {}
+impl<'a, F, I,> Fn<(&'a [I],),> for Sat<F,>
+  where F: Fn(usize, &'a I,) -> bool, {
+  extern "rust-call" fn call(&self, (input,): (&'a [I],),) -> Self::Output {
+    let matched = input.iter().enumerate()
+      .take_while(|&(i, t),| (self.pred)(i, t,),)
+      .count();
+
+    if matched < input.len() { Parse::from(input.split_at(matched,),).map(Output,) }
+    else { Parse::new(Pending(1,), input,) }
+  }
+}
 
 /// A parser which accepts tokens as long as they satisfy a predicate requiring at least
 /// one token to be accepted.
@@ -52,8 +64,7 @@ impl<F, U,> CoerceUnsized<Sat<U,>> for Sat<F,>
 /// The predicate is passed the current token and the count of previously matched tokens.
 #[derive(PartialEq, Eq, Clone, Copy, Default, Debug,)]
 #[repr(transparent,)]
-pub struct Sat1<F,>
-  where F: ?Sized, {
+pub struct Sat1<F,> {
   /// The predicate to apply.
   pub pred: F,
 }
@@ -71,11 +82,17 @@ impl<F,> Sat1<F,> {
   }
 }
 
-impl<'a, F, I,> ParserFn<&'a [I],> for Sat1<F,>
-  where F: Fn<(usize, &'a I,), Output = bool> + ?Sized, {
-  type Output = PResult<&'a [I], &'a [I; 1],>;
+impl<'a, F, I,> FnOnce<(&'a [I],),> for Sat1<F,>
+  where F: FnMut(usize, &'a I,) -> bool, {
+  type Output = Parse<PResult<&'a [I], &'a [I; 1],>, &'a [I],>;
 
-  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  #[inline]
+  extern "rust-call" fn call_once(mut self, (input,): (&'a [I],),) -> Self::Output { (&mut self)(input,) }
+}
+
+impl<'a, F, I,> FnMut<(&'a [I],),> for Sat1<F,>
+  where F: FnMut(usize, &'a I,) -> bool, {
+  extern "rust-call" fn call_mut(&mut self, (input,): (&'a [I],),) -> Self::Output {
     let matched = input.iter().enumerate()
       .take_while(|&(i, t),| (self.pred)(i, t,),)
       .count();
@@ -87,11 +104,16 @@ impl<'a, F, I,> ParserFn<&'a [I],> for Sat1<F,>
   }
 }
 
-impl<F, U,> CoerceUnsized<Sat1<U,>> for Sat1<F,>
-  where F: CoerceUnsized<U> + ?Sized,
-    U: ?Sized, {}
+impl<'a, F, I,> Fn<(&'a [I],),> for Sat1<F,>
+  where F: Fn(usize, &'a I,) -> bool, {
+  extern "rust-call" fn call(&self, (input,): (&'a [I],),) -> Self::Output {
+    let matched = input.iter().enumerate()
+      .take_while(|&(i, t),| (self.pred)(i, t,),)
+      .count();
 
-fn _assert_coerce_unsized(a: Sat<&i32,>, b: Sat1<&i32,>,) {
-  let _: Sat<&dyn Send,> = a;
-  let _: Sat1<&dyn Send,> = b;
+    if matched < input.len() {
+      if matched == 0 { Parse::new(Failed(core::array::from_ref(&input[0],),), input,) }
+      else { Parse::from(input.split_at(matched,),).map(Output,) }
+    } else { Parse::new(Pending(1,), input,) }
+  }
 }

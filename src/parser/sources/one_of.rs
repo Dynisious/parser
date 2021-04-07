@@ -1,16 +1,14 @@
 //! Author --- DMorgan  
-//! Last Moddified --- 2021-03-26
+//! Last Moddified --- 2021-04-07
 
 use crate::*;
-use core::ops::CoerceUnsized;
 
 /// A parser which accepts the next token using a set of allowed tokens.
 /// 
 /// If an unexpected token occurs the it is returned as the error.
 #[derive(PartialEq, Eq, Clone, Copy, Default, Debug,)]
 #[repr(transparent,)]
-pub struct OneOf<T,>
-  where T: ?Sized, {
+pub struct OneOf<T,> {
   /// The allowed tokens.
   pub one_of: T,
 }
@@ -28,12 +26,26 @@ impl<T,> OneOf<T,> {
   }
 }
 
-impl<'a, T, I,> ParserFn<&'a [I],> for OneOf<T,>
-  where T: AsRef<[I]> + ?Sized,
+impl<'a, T, I,> FnOnce<(&'a [I],),> for OneOf<T,>
+  where T: AsRef<[I]>,
     I: PartialEq, {
-  type Output = PResult<&'a [I; 1], &'a [I; 1],>;
+  type Output = Parse<PResult<&'a [I; 1], &'a [I; 1],>, &'a [I],>;
 
-  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  #[inline]
+  extern "rust-call" fn call_once(self, (input,): (&'a [I],),) -> Self::Output { (&self)(input,) }
+}
+
+impl<'a, T, I,> FnMut<(&'a [I],),> for OneOf<T,>
+  where T: AsRef<[I]>,
+    I: PartialEq, {
+  #[inline]
+  extern "rust-call" fn call_mut(&mut self, (input,): (&'a [I],),) -> Self::Output { (&*self)(input,) }
+}
+
+impl<'a, T, I,> Fn<(&'a [I],),> for OneOf<T,>
+  where T: AsRef<[I]>,
+    I: PartialEq, {
+  extern "rust-call" fn call(&self, (input,): (&'a [I],),) -> Self::Output {
     match input.split_first() {
       None => Parse::new(Pending(1,), input,),
       Some((tok, unused,)) => {
@@ -47,17 +59,12 @@ impl<'a, T, I,> ParserFn<&'a [I],> for OneOf<T,>
   }
 }
 
-impl<T, U,> CoerceUnsized<OneOf<U,>> for OneOf<T,>
-  where T: CoerceUnsized<U> + ?Sized,
-    U: ?Sized, {}
-
 /// A parser which accepts the next token using a set of forbidden tokens.
 /// 
 /// If an unexpected token occurs the it is returned as the error.
 #[derive(PartialEq, Eq, Clone, Copy, Default, Debug,)]
 #[repr(transparent,)]
-pub struct NoneOf<T,>
-  where T: ?Sized, {
+pub struct NoneOf<T,> {
   /// The forbidden tokens.
   pub none_of: T,
 }
@@ -75,12 +82,26 @@ impl<T,> NoneOf<T,> {
   }
 }
 
-impl<'a, T, I,> ParserFn<&'a [I],> for NoneOf<T,>
-  where T: AsRef<[I]> + ?Sized,
+impl<'a, T, I,> FnOnce<(&'a [I],),> for NoneOf<T,>
+  where T: AsRef<[I]>,
     I: PartialEq, {
-  type Output = PResult<&'a [I; 1], &'a [I; 1],>;
+  type Output = Parse<PResult<&'a [I; 1], &'a [I; 1],>, &'a [I],>;
 
-  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  #[inline]
+  extern "rust-call" fn call_once(self, (input,): (&'a [I],),) -> Self::Output { (&self)(input,) }
+}
+
+impl<'a, T, I,> FnMut<(&'a [I],),> for NoneOf<T,>
+  where T: AsRef<[I]>,
+    I: PartialEq, {
+  #[inline]
+  extern "rust-call" fn call_mut(&mut self, (input,): (&'a [I],),) -> Self::Output { (&*self)(input,) }
+}
+
+impl<'a, T, I,> Fn<(&'a [I],),> for NoneOf<T,>
+  where T: AsRef<[I]>,
+    I: PartialEq, {
+  extern "rust-call" fn call(&self, (input,): (&'a [I],),) -> Self::Output {
     match input.split_first() {
       None => Parse::new(Pending(1,), input,),
       Some((tok, unused,)) => {
@@ -92,13 +113,4 @@ impl<'a, T, I,> ParserFn<&'a [I],> for NoneOf<T,>
       },
     }
   }
-}
-
-impl<T, U,> CoerceUnsized<NoneOf<U,>> for NoneOf<T,>
-  where T: CoerceUnsized<U> + ?Sized,
-    U: ?Sized, {}
-
-fn _assert_coerce_unsized(a: OneOf<&i32,>, b: NoneOf<&i32,>,) {
-  let _: OneOf<&dyn Send,> = a;
-  let _: NoneOf<&dyn Send,> = b;
 }

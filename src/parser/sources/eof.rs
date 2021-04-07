@@ -1,5 +1,5 @@
 //! Author --- DMorgan  
-//! Last Moddified --- 2021-03-26
+//! Last Moddified --- 2021-04-07
 
 use crate::*;
 
@@ -9,11 +9,33 @@ use crate::*;
 #[derive(PartialEq, Eq, Clone, Copy, Default, Debug,)]
 pub struct Eof;
 
-impl<'a, I,> ParserFn<&'a [I],> for Eof {
-  type Output = Result<&'a [I; 0], &'a [I]>;
+impl<'a, I,> FnOnce<(&'a [I],),> for Eof {
+  type Output = Parse<Result<&'a [I; 0], &'a [I]>, &'a [I],>;
 
   #[inline]
-  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  extern "rust-call" fn call_once(self, (input,): (&'a [I],),) -> Self::Output {
+    Parse::new(
+      if input.is_empty() { Ok(&[]) }
+      else { Err(input) },
+      input,
+    )
+  }
+}
+
+impl<'a, I,> FnMut<(&'a [I],),> for Eof {
+  #[inline]
+  extern "rust-call" fn call_mut(&mut self, (input,): (&'a [I],),) -> Self::Output {
+    Parse::new(
+      if input.is_empty() { Ok(&[]) }
+      else { Err(input) },
+      input,
+    )
+  }
+}
+
+impl<'a, I,> Fn<(&'a [I],),> for Eof {
+  #[inline]
+  extern "rust-call" fn call(&self, (input,): (&'a [I],),) -> Self::Output {
     Parse::new(
       if input.is_empty() { Ok(&[]) }
       else { Err(input) },

@@ -10,3 +10,9 @@ readme = "README.md"
 
 [features]
 alloc = []
+
+[dependencies]
+combinators-rs = { version="0.2", git="https://github.com/Dynisious/combinators-rs" }
+
+[patch.'https:github.com/Dynisious/combinators-rs']
+combinators-rs = { path="../combinators-rs" }

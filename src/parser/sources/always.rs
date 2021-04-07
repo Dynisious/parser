@@ -1,5 +1,5 @@
 //! Author --- DMorgan  
-//! Last Moddified --- 2021-03-26
+//! Last Moddified --- 2021-04-07
 
 use crate::*;
 
@@ -24,12 +24,22 @@ impl<T,> Always<T,> {
   }
 }
 
-impl<T, I,> ParserFn<I,> for Always<T,>
+impl<T, I,> FnOnce<(I,),> for Always<T,>
   where T: Clone, {
-  type Output = T;
+  type Output = Parse<T, I,>;
 
   #[inline]
-  fn parse(&self, input: I,) -> Parse<Self::Output, I,> {
-    Parse::new(self.value.clone(), input,)
-  }
+  extern "rust-call" fn call_once(self, (input,): (I,),) -> Self::Output { Parse::new(self.value.clone(), input,) }
+}
+
+impl<T, I,> FnMut<(I,),> for Always<T,>
+  where T: Clone, {
+  #[inline]
+  extern "rust-call" fn call_mut(&mut self, (input,): (I,),) -> Self::Output { Parse::new(self.value.clone(), input,) }
+}
+
+impl<T, I,> Fn<(I,),> for Always<T,>
+  where T: Clone, {
+  #[inline]
+  extern "rust-call" fn call(&self, (input,): (I,),) -> Self::Output { Parse::new(self.value.clone(), input,) }
 }

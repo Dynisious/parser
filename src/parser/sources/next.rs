@@ -1,5 +1,5 @@
 //! Author --- DMorgan  
-//! Last Moddified --- 2021-03-26
+//! Last Moddified --- 2021-04-07
 
 use crate::*;
 use core::convert::TryFrom;
@@ -18,11 +18,21 @@ impl Next {
   pub const fn new(count: usize,) -> Self { Next { count, } }
 }
 
-impl<'a, I,> ParserFn<&'a [I],> for Next {
-  type Output = PResult<&'a [I], !,>;
+impl<'a, I,> FnOnce<(&'a [I],),> for Next {
+  type Output = Parse<PResult<&'a [I], !,>, &'a [I],>;
 
   #[inline]
-  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  extern "rust-call" fn call_once(self, (input,): (&'a [I],),) -> Self::Output { (&self)(input,) }
+}
+
+impl<'a, I,> FnMut<(&'a [I],),> for Next {
+  #[inline]
+  extern "rust-call" fn call_mut(&mut self, (input,): (&'a [I],),) -> Self::Output { (&*self)(input,) }
+}
+
+impl<'a, I,> Fn<(&'a [I],),> for Next {
+  #[inline]
+  extern "rust-call" fn call(&self, (input,): (&'a [I],),) -> Self::Output {
     match self.count.checked_sub(input.len(),) {
       Some(pending) if pending > 0 => Parse::new(Pending(pending,), input,),
       _ => Parse::from(input.split_at(self.count,),).map(Output,),
@@ -49,11 +59,21 @@ impl<const N: usize,> NextN<N,> {
   pub const NEXT: Next = Next::new(N,);
 }
 
-impl<'a, I, const N: usize,> ParserFn<&'a [I],> for NextN<N,> {
-  type Output = PResult<&'a [I; N], !,>;
+impl<'a, I, const N: usize,> FnOnce<(&'a [I],),> for NextN<N,> {
+  type Output = Parse<PResult<&'a [I; N], !,>, &'a [I],>;
 
   #[inline]
-  fn parse(&self, input: &'a [I],) -> Parse<Self::Output, &'a [I],> {
+  extern "rust-call" fn call_once(self, (input,): (&'a [I],),) -> Self::Output { (&self)(input,) }
+}
+
+impl<'a, I, const N: usize,> FnMut<(&'a [I],),> for NextN<N,> {
+  #[inline]
+  extern "rust-call" fn call_mut(&mut self, (input,): (&'a [I],),) -> Self::Output { (&*self)(input,) }
+}
+
+impl<'a, I, const N: usize,> Fn<(&'a [I],),> for NextN<N,> {
+  #[inline]
+  extern "rust-call" fn call(&self, (input,): (&'a [I],),) -> Self::Output {
     match N.checked_sub(input.len(),) {
       Some(pending) if pending > 0 => Parse::new(Pending(pending,), input,),
       _ => {
